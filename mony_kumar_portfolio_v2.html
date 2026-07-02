@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0d0d12;
+  --ink2:#1a1a24;
+  --muted:rgba(255,255,255,0.18);
+  --faint:rgba(255,255,255,0.06);
+  --accent:#7c6cfa;
+  --gold:#e8c97a;
+  --sky:#64c8f0;
+}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:#f0f0f8;font-family:'DM Sans',sans-serif;overflow-x:hidden}
+
+/* ── CANVAS ── */
+#c{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ── CURSOR ── */
+#cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform 0.1s,width 0.3s,height 0.3s,opacity 0.3s;mix-blend-mode:difference}
+#cursor2{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid rgba(124,108,250,0.4);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all 0.18s ease;mix-blend-mode:normal}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1.25rem 3rem;display:flex;justify-content:space-between;align-items:center}
+.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;letter-spacing:0.12em;color:#f0f0f8}
+.nav-right{display:flex;gap:2rem;align-items:center}
+.nav-link{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color 0.2s;cursor:pointer}
+.nav-link:hover{color:#f0f0f8}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+
+/* ── HERO ── */
+#hero{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;padding:0 3rem;padding-top:5rem}
+.hero-inner{max-width:900px}
+.hero-tag{display:inline-flex;align-items:center;gap:0.5rem;font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--accent);margin-bottom:2rem;opacity:0;animation:up 0.8s 0.2s forwards}
+.hero-tag::before{content:'';width:24px;height:1px;background:var(--accent)}
+.hero-h1{font-family:'Syne',sans-serif;font-size:clamp(3.5rem,9vw,7rem);font-weight:800;line-height:0.95;letter-spacing:-0.03em;margin-bottom:2rem;opacity:0;animation:up 0.9s 0.4s forwards}
+.hero-h1 .line2{display:block;color:transparent;-webkit-text-stroke:1px rgba(240,240,248,0.25)}
+.hero-h1 .accent-word{
+  background:linear-gradient(90deg,var(--accent),var(--sky));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent
+}
+.hero-desc{max-width:480px;font-size:1rem;line-height:1.75;color:rgba(240,240,248,0.5);margin-bottom:2.5rem;font-weight:300;opacity:0;animation:up 0.9s 0.6s forwards}
+.hero-desc strong{color:rgba(240,240,248,0.85);font-weight:500}
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;opacity:0;animation:up 0.9s 0.8s forwards}
+.btn-a{display:inline-flex;align-items:center;gap:0.5rem;padding:0.8rem 1.8rem;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border:none;border-radius:4px;cursor:pointer;transition:background 0.2s,transform 0.2s}
+.btn-a:hover{background:#6a5af0;transform:translateY(-2px)}
+.btn-b{display:inline-flex;align-items:center;gap:0.5rem;padding:0.8rem 1.8rem;background:transparent;color:rgba(240,240,248,0.6);font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;border:1px solid rgba(255,255,255,0.12);border-radius:4px;cursor:pointer;transition:all 0.2s}
+.btn-b:hover{border-color:var(--accent);color:#f0f0f8}
+
+/* HERO RIGHT FLOAT */
+.hero-float{position:absolute;right:3rem;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:1rem;opacity:0;animation:fadeIn 1s 1.2s forwards}
+.float-stat{text-align:right}
+.float-num{font-family:'Syne',sans-serif;font-size:2.8rem;font-weight:800;line-height:1;background:linear-gradient(135deg,#fff,rgba(255,255,255,0.35));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.float-lbl{font-size:0.65rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted)}
+.float-div{width:100%;height:1px;background:var(--faint);margin:0.25rem 0}
+
+/* SCROLL LINE */
+.scroll-line{position:absolute;bottom:2.5rem;left:3rem;display:flex;align-items:center;gap:0.75rem;opacity:0;animation:fadeIn 1s 1.5s forwards}
+.scroll-line span{font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted)}
+.scroll-track{width:48px;height:1px;background:rgba(255,255,255,0.08);position:relative;overflow:hidden}
+.scroll-thumb{position:absolute;left:0;top:0;height:100%;width:40%;background:var(--accent);animation:slide 2s infinite}
+@keyframes slide{0%{left:-40%}100%{left:140%}}
+
+/* ── MARQUEE ── */
+.marquee-wrap{position:relative;z-index:1;border-top:1px solid var(--faint);border-bottom:1px solid var(--faint);padding:1rem 0;overflow:hidden;background:var(--ink2)}
+.marquee-track{display:flex;gap:3rem;white-space:nowrap;animation:marquee 18s linear infinite}
+.marquee-item{font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:1rem}
+.marquee-item::after{content:'✦';color:var(--accent);font-size:0.6rem}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ── SECTION COMMON ── */
+.section{position:relative;z-index:1;padding:7rem 3rem;max-width:1000px;margin:0 auto}
+.s-eyebrow{font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem}
+.s-eyebrow::before{content:'';width:20px;height:1px;background:var(--accent)}
+.s-title{font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:800;letter-spacing:-0.02em;line-height:1.1;margin-bottom:0.5rem}
+.s-sub{font-size:0.95rem;color:var(--muted);font-weight:300;margin-bottom:4rem;line-height:1.7}
+
+/* ── WORK CARDS ── */
+.work-list{display:flex;flex-direction:column;gap:0}
+.work-item{padding:2rem 0;border-bottom:1px solid var(--faint);display:grid;grid-template-columns:3fr 1fr;gap:2rem;align-items:start;transition:padding-left 0.3s;cursor:default}
+.work-item:hover{padding-left:0.75rem}
+.work-item:first-child{border-top:1px solid var(--faint)}
+.wi-tag{font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent);margin-bottom:0.5rem}
+.wi-role{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:0.25rem;color:#f0f0f8}
+.wi-org{font-size:0.82rem;color:var(--muted);margin-bottom:1rem}
+.wi-bullets{display:flex;flex-direction:column;gap:0.35rem}
+.wi-b{font-size:0.8rem;color:rgba(240,240,248,0.45);padding-left:1rem;position:relative;line-height:1.6}
+.wi-b::before{content:'—';position:absolute;left:0;color:var(--accent);font-size:0.7rem}
+.wi-date{font-family:'Syne',sans-serif;font-size:0.72rem;color:var(--muted);text-align:right;letter-spacing:0.05em;padding-top:0.25rem}
+
+/* ── SKILLS ── */
+.skills-wrap{display:grid;grid-template-columns:1fr 1fr;gap:3rem}
+.sk-group-title{font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#f0f0f8;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid var(--faint)}
+.sk-items{display:flex;flex-direction:column;gap:0.5rem}
+.sk-item{display:flex;justify-content:space-between;align-items:center;font-size:0.82rem;color:rgba(240,240,248,0.55);padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.sk-bar{width:80px;height:2px;background:rgba(255,255,255,0.08);border-radius:1px;overflow:hidden}
+.sk-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--sky));border-radius:1px}
+
+/* ── NUMBERS ── */
+.nums-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--faint)}
+.num-box{padding:2.5rem 1.5rem;border-right:1px solid var(--faint);text-align:center}
+.num-box:last-child{border-right:none}
+.num-val{font-family:'Syne',sans-serif;font-size:2.5rem;font-weight:800;color:#f0f0f8;line-height:1;margin-bottom:0.5rem}
+.num-lbl{font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);line-height:1.5}
+
+/* ── CONTACT ── */
+#contact-sec{position:relative;z-index:1;padding:7rem 3rem;border-top:1px solid var(--faint)}
+.contact-inner{max-width:700px;margin:0 auto;text-align:center}
+.contact-big{font-family:'Syne',sans-serif;font-size:clamp(2rem,6vw,4.5rem);font-weight:800;letter-spacing:-0.02em;line-height:1;margin-bottom:1.5rem}
+.contact-big span{color:transparent;-webkit-text-stroke:1px rgba(240,240,248,0.2)}
+.contact-sub{font-size:0.9rem;color:var(--muted);margin-bottom:2.5rem;line-height:1.7}
+.contact-email{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;color:var(--accent);text-decoration:none;display:inline-block;margin-bottom:0.5rem;transition:color 0.2s}
+.contact-email:hover{color:var(--sky)}
+.contact-meta{font-size:0.78rem;color:var(--muted);margin-bottom:2rem}
+.contact-links{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap}
+.c-link{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.6rem 1.4rem;border:1px solid var(--faint);color:rgba(240,240,248,0.5);text-decoration:none;transition:all 0.2s;cursor:pointer}
+.c-link:hover{border-color:var(--accent);color:#f0f0f8}
+
+/* ── FOOTER ── */
+footer{position:relative;z-index:1;padding:1.5rem 3rem;border-top:1px solid var(--faint);display:flex;justify-content:space-between;align-items:center}
+.f-left{font-size:0.68rem;color:var(--muted);letter-spacing:0.08em}
+.f-right{font-size:0.68rem;color:var(--muted)}
+
+@keyframes up{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div id="cursor"></div>
+<div id="cursor2"></div>
+
+<nav>
+  <div class="nav-logo">MONY KUMAR</div>
+  <div class="nav-right">
+    <div class="nav-dot"></div>
+    <a class="nav-link" onclick="document.getElementById('work').scrollIntoView({behavior:'smooth'})">Work</a>
+    <a class="nav-link" onclick="document.getElementById('skills-sec').scrollIntoView({behavior:'smooth'})">Skills</a>
+    <a class="nav-link" onclick="document.getElementById('contact-sec').scrollIntoView({behavior:'smooth'})">Contact</a>
+  </div>
+</nav>
+
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">Finance & Accounting Professional</div>
+    <h1 class="hero-h1">
+      Mony<br>
+      <span class="line2">Kumar</span>
+    </h1>
+    <p class="hero-desc">
+      CA Inter · <strong>Remote-first finance professional</strong> with 4+ years delivering full-cycle accounting, financial analysis, and ERP operations for global clients.
+    </p>
+    <div class="hero-actions">
+      <button class="btn-a" onclick="document.getElementById('contact-sec').scrollIntoView({behavior:'smooth'})">Hire Me ↗</button>
+      <button class="btn-b" onclick="document.getElementById('work').scrollIntoView({behavior:'smooth'})">View Work</button>
+    </div>
+  </div>
+  <div class="hero-float">
+    <div class="float-stat">
+      <div class="float-num">45+</div>
+      <div class="float-lbl">Clients Managed</div>
+    </div>
+    <div class="float-div"></div>
+    <div class="float-stat">
+      <div class="float-num">$24M+</div>
+      <div class="float-lbl">Assets Analysed</div>
+    </div>
+    <div class="float-div"></div>
+    <div class="float-stat">
+      <div class="float-num">4+</div>
+      <div class="float-lbl">Years Experience</div>
+    </div>
+  </div>
+  <div class="scroll-line">
+    <span>Scroll</span>
+    <div class="scroll-track"><div class="scroll-thumb"></div></div>
+  </div>
+</section>
+
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item">QuickBooks</span>
+    <span class="marquee-item">Microsoft Dynamics 365</span>
+    <span class="marquee-item">Xero</span>
+    <span class="marquee-item">Month-End Close</span>
+    <span class="marquee-item">AR / AP</span>
+    <span class="marquee-item">Financial Analysis</span>
+    <span class="marquee-item">Tally</span>
+    <span class="marquee-item">Reconciliation</span>
+    <span class="marquee-item">Remote-Ready</span>
+    <span class="marquee-item">AI Accounting Tools</span>
+    <span class="marquee-item">QuickBooks</span>
+    <span class="marquee-item">Microsoft Dynamics 365</span>
+    <span class="marquee-item">Xero</span>
+    <span class="marquee-item">Month-End Close</span>
+    <span class="marquee-item">AR / AP</span>
+    <span class="marquee-item">Financial Analysis</span>
+    <span class="marquee-item">Tally</span>
+    <span class="marquee-item">Reconciliation</span>
+    <span class="marquee-item">Remote-Ready</span>
+    <span class="marquee-item">AI Accounting Tools</span>
+  </div>
+</div>
+
+<div class="section" style="padding-bottom:2rem">
+  <div class="nums-grid">
+    <div class="num-box">
+      <div class="num-val">45+</div>
+      <div class="num-lbl">Clients<br>Managed</div>
+    </div>
+    <div class="num-box">
+      <div class="num-val">$24M+</div>
+      <div class="num-lbl">Assets<br>Analysed</div>
+    </div>
+    <div class="num-box">
+      <div class="num-val">$600K+</div>
+      <div class="num-lbl">Revenue<br>per Client</div>
+    </div>
+    <div class="num-box" style="border-right:none">
+      <div class="num-val">4+</div>
+      <div class="num-lbl">Years<br>Experience</div>
+    </div>
+  </div>
+</div>
+
+<div id="work" class="section">
+  <div class="s-eyebrow">Experience</div>
+  <h2 class="s-title">Where I've delivered</h2>
+  <p class="s-sub">Full-cycle finance operations across industries, geographies, and scales.</p>
+  <div class="work-list">
+    <div class="work-item">
+      <div>
+        <div class="wi-tag">Finance · Accounting · Trading</div>
+        <div class="wi-role">Independent Finance Consultant</div>
+        <div class="wi-org">Self-Employed</div>
+        <div class="wi-bullets">
+          <div class="wi-b">Full-cycle accounting for 45+ clients — bookkeeping, AR/AP, ledger, month-end close, P&L.</div>
+          <div class="wi-b">Managed $600K+ annual revenues per core client with GAAP-aligned financial statements.</div>
+          <div class="wi-b">Financial analysis for companies with $24M+ in assets.</div>
+          <div class="wi-b">Branch & inventory audits — Tata, Himalaya, Apollo Pharmacy.</div>
+          <div class="wi-b">Deployed Glean.ai, Collect.ai, Bookie.ai for automated bookkeeping workflows.</div>
+        </div>
+      </div>
+      <div class="wi-date">Jan 2022<br>Present</div>
+    </div>
+    <div class="work-item">
+      <div>
+        <div class="wi-tag">Audit · Compliance · Reporting</div>
+        <div class="wi-role">Accounting Associate</div>
+        <div class="wi-org">Goenka Archana & Associates (CA Firm)</div>
+        <div class="wi-bullets">
+          <div class="wi-b">Statutory audits, tax filings, and financial statement preparation for SME clients.</div>
+          <div class="wi-b">Excel MIS reports, pivot analyses, and management dashboards.</div>
+          <div class="wi-b">Inventory reconciliations and branch-level audits.</div>
+        </div>
+      </div>
+      <div class="wi-date">2022<br>2023</div>
+    </div>
+    <div class="work-item">
+      <div>
+        <div class="wi-tag">Government · Payroll · Data Ops</div>
+        <div class="wi-role">Finance & Data Operations Specialist</div>
+        <div class="wi-org">National Rural Health Mission (Govt. of India)</div>
+        <div class="wi-bullets">
+          <div class="wi-b">Financial data integrity for large-scale government datasets — zero-error protocols.</div>
+          <div class="wi-b">Payroll processing and government-outsourced finance assignments.</div>
+        </div>
+      </div>
+      <div class="wi-date">Feb 2023<br>Dec 2023</div>
+    </div>
+    <div class="work-item">
+      <div>
+        <div class="wi-tag">AI · LLM Evaluation · Automation</div>
+        <div class="wi-role">AI Model Evaluator</div>
+        <div class="wi-org">Independent (Part-time)</div>
+        <div class="wi-bullets">
+          <div class="wi-b">Evaluated LLMs for financial reasoning accuracy and logical consistency.</div>
+          <div class="wi-b">Built AI agents to automate finance workflows.</div>
+        </div>
+      </div>
+      <div class="wi-date">Jan 2024<br>Present</div>
+    </div>
+  </div>
+</div>
+
+<div id="skills-sec" class="section">
+  <div class="s-eyebrow">Capabilities</div>
+  <h2 class="s-title">What I bring</h2>
+  <p class="s-sub">Tools and skills built over 4+ years of real-world finance work.</p>
+  <div class="skills-wrap">
+    <div>
+      <div class="sk-group-title">ERP & Accounting Software</div>
+      <div class="sk-items">
+        <div class="sk-item"><span>QuickBooks</span><div class="sk-bar"><div class="sk-fill" style="width:95%"></div></div></div>
+        <div class="sk-item"><span>Microsoft Dynamics 365</span><div class="sk-bar"><div class="sk-fill" style="width:85%"></div></div></div>
+        <div class="sk-item"><span>Xero</span><div class="sk-bar"><div class="sk-fill" style="width:90%"></div></div></div>
+        <div class="sk-item"><span>Tally</span><div class="sk-bar"><div class="sk-fill" style="width:92%"></div></div></div>
+        <div class="sk-item"><span>Ramp</span><div class="sk-bar"><div class="sk-fill" style="width:80%"></div></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="sk-group-title">Finance Operations</div>
+      <div class="sk-items">
+        <div class="sk-item"><span>AR / AP Management</span><div class="sk-bar"><div class="sk-fill" style="width:95%"></div></div></div>
+        <div class="sk-item"><span>Month-End Close</span><div class="sk-bar"><div class="sk-fill" style="width:90%"></div></div></div>
+        <div class="sk-item"><span>Financial Analysis</span><div class="sk-bar"><div class="sk-fill" style="width:88%"></div></div></div>
+        <div class="sk-item"><span>Multi-Currency Recon</span><div class="sk-bar"><div class="sk-fill" style="width:85%"></div></div></div>
+        <div class="sk-item"><span>Excel (Advanced)</span><div class="sk-bar"><div class="sk-fill" style="width:93%"></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="contact-sec">
+  <div class="contact-inner">
+    <h2 class="contact-big">Let's work<br><span>together</span></h2>
+    <p class="contact-sub">Open to remote finance & accounting roles globally.<br>US · UAE · UK · Singapore · Australia</p>
+    <a class="contact-email" href="mailto:monykumar64@gmail.com">monykumar64@gmail.com</a>
+    <div class="contact-meta">+91 95363 09204 · India</div>
+    <div class="contact-links">
+      <a class="c-link" href="https://linkedin.com/in/monyalpha">LinkedIn</a>
+      <a class="c-link" href="https://mony-kumar-portfolio.netlify.app">Portfolio</a>
+      <a class="c-link" href="mailto:monykumar64@gmail.com">Email</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="f-left">© 2025 Mony Kumar · CA Inter · Remote Finance Professional</div>
+  <div class="f-right">India · Available Worldwide</div>
+</footer>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let mx = -999, my = -999;
+
+function resize(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const pts = Array.from({length:80}, () => ({
+  x: Math.random() * window.innerWidth,
+  y: Math.random() * window.innerHeight,
+  vx: (Math.random()-0.5)*0.4,
+  vy: (Math.random()-0.5)*0.4,
+  r: Math.random()*1.2+0.3,
+  a: Math.random()*0.4+0.1
+}));
+
+function frame(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  pts.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if(p.x<0) p.x=canvas.width; if(p.x>canvas.width) p.x=0;
+    if(p.y<0) p.y=canvas.height; if(p.y>canvas.height) p.y=0;
+    const dx=p.x-mx, dy=p.y-my, d=Math.sqrt(dx*dx+dy*dy);
+    if(d<120){p.x+=dx/d*1.2; p.y+=dy/d*1.2}
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(124,108,250,${p.a})`; ctx.fill();
+  });
+  for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
+    const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.sqrt(dx*dx+dy*dy);
+    if(d<110){
+      ctx.beginPath(); ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(pts[j].x,pts[j].y);
+      ctx.strokeStyle=`rgba(124,108,250,${(1-d/110)*0.08})`; ctx.lineWidth=0.5; ctx.stroke();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+frame();
+
+const cur = document.getElementById('cursor');
+const cur2 = document.getElementById('cursor2');
+document.addEventListener('mousemove', e => {
+  mx=e.clientX; my=e.clientY;
+  cur.style.left=e.clientX+'px'; cur.style.top=e.clientY+'px';
+  setTimeout(()=>{ cur2.style.left=e.clientX+'px'; cur2.style.top=e.clientY+'px'; },80);
+});
+document.querySelectorAll('button,a,.nav-link').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ cur.style.width='16px'; cur.style.height='16px'; cur2.style.width='52px'; cur2.style.height='52px'; });
+  el.addEventListener('mouseleave',()=>{ cur.style.width='10px'; cur.style.height='10px'; cur2.style.width='36px'; cur2.style.height='36px'; });
+});
+</script>
+</body>
+</html>
